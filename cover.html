@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta content="text/html; charset=utf-8" http-equiv="Content-Type">
+    <title>stream: Go Coverage Report</title>
+    <style>
+        body {
+            background: black;
+            color: rgb(80, 80, 80);
+        }
+
+        body, pre, #legend span {
+            font-family: Menlo, monospace;
+            font-weight: bold;
+        }
+
+        #topbar {
+            background: black;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 42px;
+            border-bottom: 1px solid rgb(80, 80, 80);
+        }
+
+        #content {
+            margin-top: 50px;
+        }
+
+        #nav, #legend {
+            float: left;
+            margin-left: 10px;
+        }
+
+        #legend {
+            margin-top: 12px;
+        }
+
+        #nav {
+            margin-top: 10px;
+        }
+
+        #legend span {
+            margin: 0 5px;
+        }
+
+        .cov0 {
+            color: rgb(192, 0, 0)
+        }
+
+        .cov1 {
+            color: rgb(128, 128, 128)
+        }
+
+        .cov2 {
+            color: rgb(116, 140, 131)
+        }
+
+        .cov3 {
+            color: rgb(104, 152, 134)
+        }
+
+        .cov4 {
+            color: rgb(92, 164, 137)
+        }
+
+        .cov5 {
+            color: rgb(80, 176, 140)
+        }
+
+        .cov6 {
+            color: rgb(68, 188, 143)
+        }
+
+        .cov7 {
+            color: rgb(56, 200, 146)
+        }
+
+        .cov8 {
+            color: rgb(44, 212, 149)
+        }
+
+        .cov9 {
+            color: rgb(32, 224, 152)
+        }
+
+        .cov10 {
+            color: rgb(20, 236, 155)
+        }
+
+    </style>
+</head>
+<body>
+<div id="topbar">
+    <div id="nav">
+        <select id="files">
+
+            <option value="file0">code.byted.org/houruizhe/stream/factory.go (100.0%)</option>
+
+            <option value="file1">code.byted.org/houruizhe/stream/impl.go (100.0%)</option>
+
+            <option value="file2">code.byted.org/houruizhe/stream/iterator.go (100.0%)</option>
+
+            <option value="file3">code.byted.org/houruizhe/stream/stage.go (100.0%)</option>
+
+        </select>
+    </div>
+    <div id="legend">
+        <span>not tracked</span>
+
+        <span class="cov0">not covered</span>
+        <span class="cov8">covered</span>
+
+    </div>
+</div>
+<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package stream
+
+import (
+        "errors"
+        "reflect"
+
+        "code.byted.org/houruizhe/stream/optional"
+        "code.byted.org/houruizhe/stream/types"
+)
+
+var (
+        // ErrNotSlice a error to panic when call Slice but argument is not slice
+        ErrNotSlice = errors.New("not slice")
+        ErrNotMap   = errors.New("not map")
+)
+
+// Slice 把任意的切片类型转为[]T类型. 可用作 Of() 入参.
+// Slice convert any slice type to []types.T e.g. []int -&gt; []types.T. may used with Of().
+// Note: cannot use ints (type []int) as type []types.T in argument to streams.Of
+func Slice(slice types.T) []types.T <span class="cov8" title="1">{
+        if reflect.TypeOf(slice).Kind() != reflect.Slice </span><span class="cov8" title="1">{
+                panic(ErrNotSlice)</span>
+        }
+        <span class="cov8" title="1">value := reflect.ValueOf(slice)
+        count := value.Len()
+        result := make([]types.T, 0, count)
+        for i := 0; i &lt; count; i++ </span><span class="cov8" title="1">{
+                result = append(result, value.Index(i).Interface())
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+// Entries 把任意的 map 类型转为 []Pair
+// Entries return entries of a map as []types.Pair which `First` field is key, `Second` field is value
+func Entries(mapValue types.T) []types.Pair <span class="cov8" title="1">{
+        if reflect.TypeOf(mapValue).Kind() != reflect.Map </span><span class="cov8" title="1">{
+                panic(ErrNotMap)</span>
+        }
+        <span class="cov8" title="1">value := reflect.ValueOf(mapValue)
+        count := value.Len()
+        result := make([]types.Pair, 0, count)
+        var it = value.MapRange()
+        for it.Next() </span><span class="cov8" title="1">{
+                result = append(result, types.Pair{
+                        First:  it.Key().Interface(),
+                        Second: it.Value().Interface(),
+                })
+        }</span>
+        <span class="cov8" title="1">return result</span>
+}
+
+// Of create a Stream from some element
+// It's recommend to pass pointer type cause the element may be copy at each operate
+func Of(elements ...types.T) Stream <span class="cov8" title="1">{
+        return newHead(it(elements...))
+}</span>
+
+func OfInts(element ...int) Stream <span class="cov8" title="1">{
+        return newHead(&amp;intsIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    len(element),
+                },
+                elements: element,
+        })
+}</span>
+func OfInt64s(element ...int64) Stream <span class="cov8" title="1">{
+        return newHead(&amp;int64sIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    len(element),
+                },
+                elements: element,
+        })
+}</span>
+func OfFloat32s(element ...float32) Stream <span class="cov8" title="1">{
+        return newHead(&amp;float32sIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    len(element),
+                },
+                elements: element,
+        })
+}</span>
+func OfFloat64s(element ...float64) Stream <span class="cov8" title="1">{
+        return newHead(&amp;float64sIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    len(element),
+                },
+                elements: element,
+        })
+}</span>
+func OfStrings(element ...string) Stream <span class="cov8" title="1">{
+        return newHead(&amp;stringIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    len(element),
+                },
+                elements: element,
+        })
+}</span>
+
+// OfSlice return a Stream. the input parameter `slice` must be a slice.
+// if input is nil, return a empty Stream( same as Of() )
+func OfSlice(slice types.T) Stream <span class="cov8" title="1">{
+        if optional.IsNil(slice) </span><span class="cov8" title="1">{
+                return Of()
+        }</span>
+        <span class="cov8" title="1">if reflect.TypeOf(slice).Kind() != reflect.Slice </span><span class="cov8"
+                                                                                                   title="1">{
+                panic(ErrNotSlice)</span>
+        }
+        <span class="cov8" title="1">value := reflect.ValueOf(slice)
+        it := &amp;sliceIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    value.Len(),
+                },
+                sliceValue: value,
+        }
+        return newHead(it)</span>
+}
+
+// OfMap return a Stream which element type is types.Pair.
+// the input parameter `mapValue` must be a map or it will panic
+// if mapValue is nil, return a empty Stream ( same as Of() )
+func OfMap(mapValue types.T) Stream <span class="cov8" title="1">{
+        if optional.IsNil(mapValue) </span><span class="cov8" title="1">{
+                return Of()
+        }</span>
+        <span class="cov8" title="1">if reflect.TypeOf(mapValue).Kind() != reflect.Map </span><span class="cov8"
+                                                                                                    title="1">{
+                panic(ErrNotMap)</span>
+        }
+        <span class="cov8" title="1">value := reflect.ValueOf(mapValue)
+        it := &amp;mapIt{
+                base: &amp;base{
+                        current: 0,
+                        size:    value.Len(),
+                },
+                mapValue: value.MapRange(),
+        }
+        return newHead(it)</span>
+}
+
+// Iterate create a Stream by a seed and an UnaryOperator
+func Iterate(seed types.T, operator types.UnaryOperator) Stream <span class="cov8" title="1">{
+        return newHead(withSeed(seed, operator))
+}</span>
+
+// Generate generates a infinite Stream which each element is generate by Supplier
+func Generate(get types.Supplier) Stream <span class="cov8" title="1">{
+        return newHead(withSupplier(get))
+}</span>
+
+// Repeat returns a infinite Stream which all element is same
+func Repeat(e types.T) Stream <span class="cov8" title="1">{
+        return newHead(withSupplier(func() types.T </span><span class="cov8" title="1">{
+                return e
+        }</span>))
+}
+
+// RepeatN returns a Stream which has `count` element and all the element is the given `e`
+func RepeatN(e types.T, count int64) Stream <span class="cov8" title="1">{
+        return Repeat(e).Limit(count)
+}</span>
+
+// IntRange creates a Stream which element is the given range
+func IntRange(fromInclude, toExclude int) Stream <span class="cov8" title="1">{
+        return IntRangeStep(fromInclude, toExclude, 1)
+}</span>
+
+// IntRangeStep creates a Stream which element is the given range by step
+func IntRangeStep(fromInclude, toExclude, step int) Stream <span class="cov8" title="1">{
+        return newHead(withRange(epInt(fromInclude), epInt(toExclude), step)).Map(func(t types.T) types.R </span><span
+                    class="cov8" title="1">{
+                // streams.epInt is not int
+                // 所以转回 int 让调用方不至于迷惑
+                return int(t.(epInt))
+        }</span>)
+}
+
+// Int64Range like IntRange
+func Int64Range(fromInclude, toExclude int64) Stream <span class="cov8" title="1">{
+        return Int64RangeStep(fromInclude, toExclude, 1)
+}</span>
+
+// Int64RangeStep like IntRangeStep
+func Int64RangeStep(fromInclude, toExclude int64, step int) Stream <span class="cov8" title="1">{
+        return newHead(withRange(epInt64(fromInclude), epInt64(toExclude), step)).Map(func(t types.T) types.R </span><span
+                    class="cov8" title="1">{
+                return int64(t.(epInt64))
+        }</span>)
+}
+</pre>
+
+    <pre class="file" id="file1" style="display: none">package stream
+
+import (
+        "reflect"
+        "sort"
+
+        "code.byted.org/houruizhe/stream/optional"
+        "code.byted.org/houruizhe/stream/types"
+)
+
+// stream is a node show as below. which source is a iterator. head stream has no prev node.
+// terminal operate create a terminalStage,
+// then this terminalStage will use a downStage of prev node and wrap a new stage,
+// finally trigger source to iterate it's data to the wrappedStage
+//
+// stream 是数据流中的一个节点，见下图。头节点没有前驱节点。每个操作会创建一个新的节点，连接到原有节点后。
+// 终止操作会创建一个 terminalStage, 这个 terminalStage 会作为最后一个节点的 downStage, 依次往前调用 wrap 方法，生成最终的 wrappedStage
+// 最后触发数据源迭代每个元素给 wrappedStage
+//
+//            head filter   map   for-each
+//            +--+    +---+    +--+
+//     nil &lt;- |  | &lt;- |   | &lt;- |  | &lt;- terminalStage
+//            +--+    +---+    +--+
+//
+//                +-filter----------------+
+//  source --&gt;    |                       |
+//                |       +-map-----------+
+//                |       |               |
+//                |       |    +-for-each-+
+//                |       |    |          | terminalStage
+//                +-------+----+----------+
+//
+//               &lt;----- wrapped stage -----&gt;
+type stream struct {
+        source iterator // 数据源
+        prev   *stream  // 前一个流
+        wrap   func(stage) stage
+}
+
+// region help methods 帮助方法
+
+// newHead 构造头节点
+func newHead(source iterator) *stream <span class="cov8" title="1">{
+        return &amp;stream{source: source}
+}</span>
+
+// newNode 构造中间节点
+func newNode(prev *stream, wrap func(down stage) stage) *stream <span class="cov8" title="1">{
+        return &amp;stream{
+                source: prev.source,
+                prev:   prev,
+                wrap:   wrap,
+        }
+}</span>
+
+// terminal 终止操作调用。触发包装各项操作，开始元素遍历
+func (s *stream) terminal(ts *terminalStage) <span class="cov8" title="1">{
+        stage := s.wrapStage(ts)
+        source := s.source
+        stage.Begin(source.GetSizeIfKnown())
+        for source.HasNext() &amp;&amp; !stage.CanFinish() </span><span class="cov8" title="1">{
+                stage.Accept(source.Next())
+        }</span>
+        <span class="cov8" title="1">stage.End()</span>
+}
+
+// wrapStage 将所有操作"包装"为一个操作。从终止操作开始往前(因为 wrap 的参数是 downStage)包装
+func (s *stream) wrapStage(terminalStage stage) stage <span class="cov8" title="1">{
+        stage := terminalStage
+        for i := s; i.prev != nil; i = i.prev </span><span class="cov8" title="1">{
+                stage = i.wrap(stage)
+        }</span>
+        <span class="cov8" title="1">return stage</span>
+}
+
+// endregion 帮助方法
+
+// region 无状态操作
+
+// Filter 过滤操作
+// test is a Predicate, return true then keep the element 返回 true 的将保留
+func (s *stream) Filter(test types.Predicate) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                return newChainedStage(down, begin(func(int64) </span><span class="cov8" title="1">{
+                        down.Begin(unknownSize) // 过滤后个数不确定
+                }</span>), action(func(t types.T) <span class="cov8" title="1">{
+                        if test(t) </span><span class="cov8" title="1">{
+                                down.Accept(t)
+                        }</span>
+                }))
+        })
+}
+
+// Map 转换操作
+// apply is a Function, convert the element to another 转换元素
+func (s *stream) Map(apply types.Function) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                return newChainedStage(down, action(func(t types.T) </span><span class="cov8" title="1">{
+                        down.Accept(apply(t))
+                }</span>))
+        })
+}
+
+// FlatMap 打平集合为元素。[[1,2],[3,4]] -&gt; [1,2,3,4]
+func (s *stream) FlatMap(flatten func(t types.T) Stream) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                return newChainedStage(down, begin(func(int64) </span><span class="cov8" title="1">{
+                        down.Begin(unknownSize) // 最终个数不确定
+                }</span>), action(func(t types.T) <span class="cov8" title="1">{
+                        ss := flatten(t)        // 元素是集合，转为流
+                        ss.ForEach(down.Accept) // 消费流中的元素
+                }</span>))
+        })
+}
+
+// Peek visit every element and leave them on stream so that they can be operated by next action  访问流中每个元素而不消费它，可用于 debug
+func (s *stream) Peek(consumer types.Consumer) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                return newChainedStage(down, action(func(t types.T) </span><span class="cov8" title="1">{
+                        consumer(t)
+                        down.Accept(t)
+                }</span>))
+        })
+}
+
+// endregion 无状态操作
+
+// region 有状态操作
+
+// Distinct remove duplicate 去重操作
+// distincter is a IntFunction, which return a int hashcode to identity each element 返回元素的唯一标识用于区分每个元素
+func (s *stream) Distinct(distincter types.IntFunction) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                var set map[int]bool
+                return newChainedStage(down, begin(func(int64) </span><span class="cov8" title="1">{
+                        set = make(map[int]bool)
+                        down.Begin(unknownSize) // 去重后个数不确定
+                }</span>), action(func(t types.T) <span class="cov8" title="1">{
+                        hash := distincter(t)
+                        _, has := set[hash]
+                        if !has </span><span class="cov8" title="1">{ // 唯一的元素才往下游发送
+                                down.Accept(t)
+                                set[hash] = true
+                        }</span>
+                }), end(func() <span class="cov8" title="1">{
+                        set = nil
+                        down.End()
+                }</span>))
+        })
+}
+
+// Sorted sort by Comparator 排序
+func (s *stream) Sorted(cmp types.Comparator) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                var list []types.T
+                return newChainedStage(down, begin(func(size int64) </span><span class="cov8" title="1">{
+                        if size &gt; 0 </span><span class="cov8" title="1">{
+                                list = make([]types.T, 0, size)
+                        }</span> else<span class="cov8" title="1"> {
+                                list = make([]types.T, 0)
+                        }</span>
+                        <span class="cov8" title="1">down.Begin(size)</span>
+                }), action(func(t types.T) <span class="cov8" title="1">{
+                        list = append(list, t)
+                }</span>), end(func() <span class="cov8" title="1">{
+                        a := &amp;Sortable{
+                                List: list,
+                                Cmp:  cmp,
+                        }
+                        sort.Sort(a)
+                        down.Begin(int64(len(a.List)))
+                        i := it(a.List...)
+                        for i.HasNext() &amp;&amp; !down.CanFinish() </span><span class="cov8" title="1">{
+                                down.Accept(i.Next())
+                        }</span>
+                        <span class="cov8" title="1">list = nil
+                        a = nil
+                        down.End()</span>
+                }))
+        })
+}
+
+// Limit 限制元素个数
+func (s *stream) Limit(maxSize int64) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                count := int64(0)
+                return newChainedStage(down, begin(func(size int64) </span><span class="cov8" title="1">{
+                        if size &gt; 0 </span><span class="cov8" title="1">{
+                                if size &gt; maxSize </span><span class="cov8" title="1">{
+                                        size = maxSize
+                                }</span>
+                        }
+                        <span class="cov8" title="1">down.Begin(size)</span>
+                }), action(func(t types.T) <span class="cov8" title="1">{
+                        if count &lt; maxSize </span><span class="cov8" title="1">{
+                                down.Accept(t)
+                        }</span>
+                        <span class="cov8" title="1">count++</span>
+                }), canFinish(func() bool <span class="cov8" title="1">{
+                        return count == maxSize // 已经到了限制数量，就可以提前结束了
+                }</span>))
+        })
+}
+
+// Skip 跳过指定个数的元素
+func (s *stream) Skip(n int64) Stream <span class="cov8" title="1">{
+        return newNode(s, func(down stage) stage </span><span class="cov8" title="1">{
+                count := int64(0)
+                return newChainedStage(down, begin(func(size int64) </span><span class="cov8" title="1">{
+                        if size &gt; 0 </span><span class="cov8" title="1">{
+                                size -= n
+                                if size &lt; 0 </span><span class="cov8" title="1">{
+                                        size = 0
+                                }</span>
+                        }
+                        <span class="cov8" title="1">down.Begin(size)</span>
+                }), action(func(t types.T) <span class="cov8" title="1">{
+                        if count &gt;= n </span><span class="cov8" title="1">{
+                                down.Accept(t)
+                        }</span>
+                        <span class="cov8" title="1">count++</span>
+                }))
+        })
+}
+
+// endregion 有状态操作
+
+// region 终止操作
+
+// ForEach 消费流中每个元素
+func (s *stream) ForEach(consumer types.Consumer) <span class="cov8" title="1">{
+        s.terminal(newTerminalStage(consumer))
+}</span>
+
+// ToSlice 转为切片
+func (s *stream) ToSlice() []types.T <span class="cov8" title="1">{
+        return s.ReduceBy(func(count int64) types.R </span><span class="cov8" title="1">{
+                if count &gt;= 0 </span><span class="cov8" title="1">{
+                        return make([]types.T, 0, count)
+                }</span>
+                <span class="cov8" title="1">return make([]types.T, 0)</span>
+        }, func(acc types.R, t types.T) types.R <span class="cov8" title="1">{
+                slice := acc.([]types.T)
+                slice = append(slice, t)
+                return slice
+        }</span>).([]types.T)
+}
+
+// ToElementSlice needs a argument cause the stream may be empty
+func (s *stream) ToElementSlice(some types.T) types.R <span class="cov8" title="1">{
+        return s.ToSliceOf(reflect.TypeOf(some))
+}</span>
+
+// ToSliceOf return []X which X is same as the `typ` representation
+func (s *stream) ToSliceOf(typ reflect.Type) types.R <span class="cov8" title="1">{
+        sliceType := reflect.SliceOf(typ)
+        return s.ReduceBy(func(size int64) types.R </span><span class="cov8" title="1">{
+                if size &gt;= 0 </span><span class="cov8" title="1">{
+                        return reflect.MakeSlice(sliceType, 0, int(size))
+                }</span>
+                <span class="cov8" title="1">return reflect.MakeSlice(sliceType, 0, 16)</span>
+        }, func(acc types.R, t types.T) types.R <span class="cov8" title="1">{
+                sliceValue := acc.(reflect.Value)
+                sliceValue = reflect.Append(sliceValue, reflect.ValueOf(t))
+                return sliceValue
+        }</span>).(reflect.Value).
+                Interface()
+}
+
+// AllMatch 测试是否所有元素符合断言
+func (s *stream) AllMatch(test types.Predicate) bool <span class="cov8" title="1">{
+        var result = true
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                if !test(t) </span><span class="cov8" title="1">{
+                        result = false // 有任意一个不符合
+                }</span>
+        }, canFinish(func() bool <span class="cov8" title="1">{
+                return !result // 有一个不符合就可以结束了
+        }</span>)))
+        <span class="cov8" title="1">return result</span>
+}
+
+// NoneMatch 测试是否没有元素符合断言
+func (s *stream) NoneMatch(test types.Predicate) bool <span class="cov8" title="1">{
+        var result = true
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                if test(t) </span><span class="cov8" title="1">{
+                        result = false // 有任意一个符合
+                }</span>
+        }, canFinish(func() bool <span class="cov8" title="1">{
+                return !result // 有一个符合就可以结束了
+        }</span>)))
+        <span class="cov8" title="1">return result</span>
+}
+
+// AnyMatch 测试是否有任意一个元素符合断言
+func (s *stream) AnyMatch(test types.Predicate) bool <span class="cov8" title="1">{
+        var result = false
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                if test(t) </span><span class="cov8" title="1">{
+                        result = true // 有任意一个符合
+                }</span>
+        }, canFinish(func() bool <span class="cov8" title="1">{
+                return result // 有任意一个符合就可以结束
+        }</span>)))
+        <span class="cov8" title="1">return result</span>
+}
+
+func (s *stream) Reduce(accumulator types.BinaryOperator) optional.Optional <span class="cov8" title="1">{
+        var result types.T = nil
+        var hasElement = false
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                if !hasElement </span><span class="cov8" title="1">{
+                        result = t
+                        hasElement = true
+                }</span> else<span class="cov8" title="1"> {
+                        result = accumulator(result, t)
+                }</span>
+        }))
+        <span class="cov8" title="1">if hasElement </span><span class="cov8" title="1">{
+                return optional.Of(result)
+        }</span>
+        <span class="cov8" title="1">return optional.Empty()</span>
+}
+
+// ReduceFrom 从给定的初始值 initValue(类型和元素类型相同) 开始迭代 使用 accumulator(2个入参类型和返回类型相同) 累计结果
+func (s *stream) ReduceFrom(initValue types.T, accumulator types.BinaryOperator) types.T <span class="cov8" title="1">{
+        var result = initValue
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                result = accumulator(result, t)
+        }</span>))
+        <span class="cov8" title="1">return result</span>
+}
+
+// ReduceWith 使用给定的初始值 initValue(类型和元素类型不同) 开始迭代 使用 accumulator( R + T -&gt; R) 累计结果
+func (s *stream) ReduceWith(initValue types.R, accumulator func(types.R, types.T) types.R) types.R <span class="cov8"
+                                                                                                         title="1">{
+        var result = initValue
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                result = accumulator(result, t)
+        }</span>))
+        <span class="cov8" title="1">return result</span>
+}
+
+// ReduceBy 使用给定的初始化方法(参数是元素个数，或-1)生成 initValue, 然后使用 accumulator 累计结果
+// ReduceBy use `buildInitValue` to build the initValue, which parameter is a int64 means element size, or -1 if unknown size.
+// Then use `accumulator` to add each element to previous result
+func (s *stream) ReduceBy(buildInitValue func(int64) types.R, accumulator func(types.R, types.T) types.R) types.R <span
+                class="cov8" title="1">{
+        var result types.R
+        s.terminal(newTerminalStage(func(e types.T) </span><span class="cov8" title="1">{
+                result = accumulator(result, e)
+        }</span>, begin(func(count int64) <span class="cov8" title="1">{
+                result = buildInitValue(count)
+        }</span>)))
+        <span class="cov8" title="1">return result</span>
+}
+
+func (s *stream) FindFirst() optional.Optional <span class="cov8" title="1">{
+        var result types.T
+        var find = false
+        s.terminal(newTerminalStage(func(t types.T) </span><span class="cov8" title="1">{
+                if !find </span><span class="cov8" title="1">{
+                        result = t
+                        find = true
+                }</span>
+        }, canFinish(func() bool <span class="cov8" title="1">{
+                return find
+        }</span>)))
+        <span class="cov8" title="1">return optional.OfNullable(result)</span>
+}
+
+// Count 计算元素个数
+func (s *stream) Count() int64 <span class="cov8" title="1">{
+        return s.ReduceWith(int64(0), func(count types.R, t types.T) types.R </span><span class="cov8" title="1">{
+                return count.(int64) + 1
+        }</span>).(int64)
+}
+
+// endregion 终止操作
+</pre>
+
+    <pre class="file" id="file2" style="display: none">package stream
+
+import (
+        "reflect"
+
+        "code.byted.org/houruizhe/stream/types"
+)
+
+const unknownSize = -1
+
+type iterator interface {
+        GetSizeIfKnown() int64
+        HasNext() bool
+        Next() types.T
+}
+
+func it(elements ...types.T) iterator <span class="cov8" title="1">{
+        return &amp;sliceIterator{
+                base: &amp;base{
+                        current: 0,
+                        size:    len(elements),
+                },
+                elements: elements,
+        }
+}</span>
+func withSeed(seed types.T, f types.UnaryOperator) iterator <span class="cov8" title="1">{
+        return &amp;seedIt{
+                element:  seed,
+                operator: f,
+                first:    true,
+        }
+}</span>
+func withSupplier(get types.Supplier) iterator <span class="cov8" title="1">{
+        return &amp;supplierIt{get: get}
+}</span>
+func withRange(fromInclude, toExclude endpoint, step int) iterator <span class="cov8" title="1">{
+        return &amp;rangeIt{
+                from: fromInclude,
+                to:   toExclude,
+                step: step,
+                next: fromInclude,
+        }
+}</span>
+
+type base struct {
+        current int
+        size    int
+}
+
+func (b *base) GetSizeIfKnown() int64 <span class="cov8" title="1">{
+        return int64(b.size)
+}</span>
+
+func (b *base) HasNext() bool <span class="cov8" title="1">{
+        return b.current &lt; b.size
+}</span>
+
+// region sliceIterator
+
+type sliceIterator struct {
+        *base
+        elements []types.T
+}
+
+func (s *sliceIterator) Next() types.T <span class="cov8" title="1">{
+        e := s.elements[s.current]
+        s.current++
+        return e
+}</span>
+
+// endregion sliceIterator
+
+type intsIt struct {
+        *base
+        elements []int
+}
+
+func (i *intsIt) Next() types.T <span class="cov8" title="1">{
+        e := i.elements[i.current]
+        i.current++
+        return e
+}</span>
+
+type int64sIt struct {
+        *base
+        elements []int64
+}
+
+func (i *int64sIt) Next() types.T <span class="cov8" title="1">{
+        e := i.elements[i.current]
+        i.current++
+        return e
+}</span>
+
+type float32sIt struct {
+        *base
+        elements []float32
+}
+
+func (i *float32sIt) Next() types.T <span class="cov8" title="1">{
+        e := i.elements[i.current]
+        i.current++
+        return e
+}</span>
+
+type float64sIt struct {
+        *base
+        elements []float64
+}
+
+func (i *float64sIt) Next() types.T <span class="cov8" title="1">{
+        e := i.elements[i.current]
+        i.current++
+        return e
+}</span>
+
+type stringIt struct {
+        *base
+        elements []string
+}
+
+func (i *stringIt) Next() types.T <span class="cov8" title="1">{
+        e := i.elements[i.current]
+        i.current++
+        return e
+}</span>
+
+// region sliceIt
+
+// sliceIt 切片迭代器 反射实现
+// sliceIt a slice iterator implement with reflect.Value
+type sliceIt struct {
+        *base
+        sliceValue reflect.Value
+}
+
+func (s *sliceIt) Next() types.T <span class="cov8" title="1">{
+        e := s.sliceValue.Index(s.current).Interface()
+        s.current++
+        return e
+}</span>
+
+// endregion sliceIt
+
+type mapIt struct {
+        *base
+        mapValue *reflect.MapIter
+}
+
+func (m *mapIt) Next() types.T <span class="cov8" title="1">{
+        m.base.current++
+        m.mapValue.Next()
+        return types.Pair{
+                First:  m.mapValue.Key().Interface(),
+                Second: m.mapValue.Value().Interface(),
+        }
+}</span>
+
+// region seedIt
+
+type seedIt struct {
+        element  types.T
+        operator types.UnaryOperator
+        first    bool
+}
+
+func (s *seedIt) GetSizeIfKnown() int64 <span class="cov8" title="1">{
+        return unknownSize
+}</span>
+
+func (s *seedIt) HasNext() bool <span class="cov8" title="1">{
+        return true
+}</span>
+
+func (s *seedIt) Next() types.T <span class="cov8" title="1">{
+        if s.first </span><span class="cov8" title="1">{
+                s.first = false
+                return s.element
+        }</span>
+        <span class="cov8" title="1">s.element = s.operator(s.element)
+        return s.element</span>
+}
+
+// endregion seedIt
+
+// region supplierIt
+
+type supplierIt struct {
+        get types.Supplier
+}
+
+func (s *supplierIt) GetSizeIfKnown() int64 <span class="cov8" title="1">{
+        return unknownSize
+}</span>
+
+func (s *supplierIt) HasNext() bool <span class="cov8" title="1">{
+        return true
+}</span>
+
+func (s *supplierIt) Next() types.T <span class="cov8" title="1">{
+        return s.get()
+}</span>
+
+// endregion supplierIt
+
+// region rangeIt
+
+type rangeIt struct {
+        from endpoint
+        to   endpoint
+        step int
+        next endpoint
+}
+
+func (r *rangeIt) GetSizeIfKnown() int64 <span class="cov8" title="1">{
+        return unknownSize
+}</span>
+
+func (r *rangeIt) HasNext() bool <span class="cov8" title="1">{
+        if r.step &gt;= 0 </span><span class="cov8" title="1">{
+                return r.next.CompareTo(r.to) &lt; 0
+        }</span>
+        <span class="cov8" title="1">return r.next.CompareTo(r.to) &gt; 0</span>
+}
+
+func (r *rangeIt) Next() types.T <span class="cov8" title="1">{
+        curr := r.next
+        r.next = curr.Add(r.step)
+        return curr
+}</span>
+
+// endregion rangeIt
+
+// region Sortable
+
+// Sortable use types.Comparator to sort []types.T 可以使用指定的 cmp 比较器对 list 进行排序
+// see sort.Interface
+type Sortable struct {
+        List []types.T
+        Cmp  types.Comparator
+}
+
+func (a *Sortable) Len() int <span class="cov8" title="1">{
+        return len(a.List)
+}</span>
+
+func (a *Sortable) Less(i, j int) bool <span class="cov8" title="1">{
+        return a.Cmp(a.List[i], a.List[j]) &lt; 0
+}</span>
+
+func (a *Sortable) Swap(i, j int) <span class="cov8" title="1">{
+        a.List[i], a.List[j] = a.List[j], a.List[i]
+}</span>
+
+// endregion Sortable
+
+// region endpoint
+
+// endpoint used in rangeIt.
+type endpoint interface {
+        CompareTo(other endpoint) int
+        Add(step int) endpoint
+}
+
+type epInt int
+
+func (m epInt) CompareTo(other endpoint) int <span class="cov8" title="1">{
+        return int(m - other.(epInt))
+}</span>
+
+func (m epInt) Add(step int) endpoint <span class="cov8" title="1">{
+        return m + epInt(step)
+}</span>
+
+type epInt64 int64
+
+func (m epInt64) CompareTo(other endpoint) int <span class="cov8" title="1">{
+        return int(m - other.(epInt64))
+}</span>
+
+func (m epInt64) Add(step int) endpoint <span class="cov8" title="1">{
+        return m + epInt64(step)
+}</span>
+
+// endregion endpoint
+</pre>
+
+    <pre class="file" id="file3" style="display: none">package stream
+
+import "code.byted.org/houruizhe/stream/types"
+
+// stage 记录一个操作
+// Begin 用于操作开始，参数是元素的个数，如果个数不确定，则是 unknownSize
+// Accept 接收每个元素
+// CanFinish 用于判断是否可以提前结束
+// End 是收尾动作
+type stage interface {
+        Begin(size int64)
+        Accept(types.T)
+        CanFinish() bool
+        End()
+}
+
+// region baseStage
+
+type baseStage struct {
+        begin     func(int64) // begin(size)
+        action    types.Consumer
+        canFinish func() bool // canFinish() bool
+        end       func()      // end()
+}
+
+func (b *baseStage) Begin(size int64) <span class="cov8" title="1">{
+        b.begin(size)
+}</span>
+
+func (b *baseStage) Accept(t types.T) <span class="cov8" title="1">{
+        b.action(t)
+}</span>
+
+func (b *baseStage) CanFinish() bool <span class="cov8" title="1">{
+        return b.canFinish()
+}</span>
+
+func (b *baseStage) End() <span class="cov8" title="1">{
+        b.end()
+}</span>
+
+type option func(b *baseStage)
+
+func begin(onBegin func(int64)) option <span class="cov8" title="1">{
+        return func(c *baseStage) </span><span class="cov8" title="1">{
+                c.begin = onBegin
+        }</span>
+}
+
+func canFinish(judge func() bool) option <span class="cov8" title="1">{
+        return func(c *baseStage) </span><span class="cov8" title="1">{
+                c.canFinish = judge
+        }</span>
+}
+
+func action(onAction types.Consumer) option <span class="cov8" title="1">{
+        return func(c *baseStage) </span><span class="cov8" title="1">{
+                c.action = onAction
+        }</span>
+}
+func end(onEnd func()) option <span class="cov8" title="1">{
+        return func(c *baseStage) </span><span class="cov8" title="1">{
+                c.end = onEnd
+        }</span>
+}
+
+// endregion baseStage
+
+// region chainedStage
+
+// chainedStage 串起下一个操作
+// down 是下一个操作
+type chainedStage struct {
+        *baseStage
+}
+
+func defaultChainedStage(down stage) *chainedStage <span class="cov8" title="1">{
+        return &amp;chainedStage{
+                baseStage: &amp;baseStage{
+                        begin:     down.Begin,
+                        action:    down.Accept,
+                        canFinish: down.CanFinish,
+                        end:       down.End,
+                },
+        }
+}</span>
+
+func newChainedStage(down stage, opt ...option) *chainedStage <span class="cov8" title="1">{
+        s := defaultChainedStage(down)
+        for _, o := range opt </span><span class="cov8" title="1">{
+                o(s.baseStage)
+        }</span>
+        <span class="cov8" title="1">return s</span>
+}
+
+//  endregion
+
+// region terminalStage
+
+type terminalStage struct {
+        *baseStage
+}
+
+func defaultTerminal(action types.Consumer) *terminalStage <span class="cov8" title="1">{
+        return &amp;terminalStage{&amp;baseStage{
+                begin:     func(int64) </span>{<span class="cov8" title="1">}</span>,
+                action:    action,
+                canFinish: func() bool <span class="cov8" title="1">{ return false }</span>,
+                end:       func() {<span class="cov8" title="1">}</span>,
+        }}
+}
+
+func newTerminalStage(action types.Consumer, opt ...option) *terminalStage <span class="cov8" title="1">{
+        s := defaultTerminal(action)
+        for _, o := range opt </span><span class="cov8" title="1">{
+                o(s.baseStage)
+        }</span>
+        <span class="cov8" title="1">return s</span>
+}
+
+// endregion terminalStage
+</pre>
+
+</div>
+</body>
+<script>
+    (function () {
+        var files = document.getElementById('files');
+        var visible;
+        files.addEventListener('change', onChange, false);
+
+        function select(part) {
+            if (visible)
+                visible.style.display = 'none';
+            visible = document.getElementById(part);
+            if (!visible)
+                return;
+            files.value = part;
+            visible.style.display = 'block';
+            location.hash = part;
+        }
+
+        function onChange() {
+            select(files.value);
+            window.scrollTo(0, 0);
+        }
+
+        if (location.hash != "") {
+            select(location.hash.substr(1));
+        }
+        if (!visible) {
+            select("file0");
+        }
+    })();
+</script>
+</html>
