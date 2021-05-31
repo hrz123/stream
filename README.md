@@ -1,6 +1,11 @@
+## Introduction
+Out of box go stream implementation.
+
 ## Usage
 
-详细使用见example_test.go
+See example_test.go
 
-### 测试覆盖率
+### Test Coverage
+100%
+
 ![img.png](docs/images/img.png)
